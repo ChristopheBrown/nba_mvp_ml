@@ -1,0 +1,39 @@
+version: 2.1
+      
+orbs:
+  snyk: snyk/snyk@1.4.0
+  
+jobs:
+  main:
+    parameters:
+      image: 
+        type: string
+      circle_pr_number:
+        type: string
+        default: $CIRCLE_PR_NUMBER
+    
+    docker: 
+      - image: <<parameters.image>>
+    
+    steps: 
+      - checkout
+      - run: poetry install --no-ansi
+      - unless:
+          condition: << parameters.circle_pr_number >>
+          steps:
+            - snyk/scan
+      - run: poetry run pytest
+      - run: poetry run flake8
+
+workflows:
+  build:
+    jobs:
+      - main:
+          matrix:
+            parameters:
+              image: [
+                "cimg/python:3.9",
+                "cimg/python:3.10",
+                "cimg/python:3.11"
+              ]
+     
