@@ -1,0 +1,100 @@
+blocks:
+- all_upstream_blocks_executed: true
+  color: null
+  configuration:
+    file_path: data_loaders/mvp_loader.py
+    file_source:
+      path: data_loaders/mvp_loader.py
+    year: '2023'
+  downstream_blocks:
+  - player_loader
+  - stats_agg
+  executor_config: null
+  executor_type: local_python
+  has_callback: false
+  language: python
+  name: mvp_loader
+  retry_config: {}
+  status: executed
+  timeout: null
+  type: data_loader
+  upstream_blocks: []
+  uuid: mvp_loader
+- all_upstream_blocks_executed: true
+  color: null
+  configuration: {}
+  downstream_blocks:
+  - stats_agg
+  executor_config: null
+  executor_type: local_python
+  has_callback: false
+  language: python
+  name: team_loader
+  retry_config: null
+  status: executed
+  timeout: null
+  type: data_loader
+  upstream_blocks: []
+  uuid: team_loader
+- all_upstream_blocks_executed: true
+  color: null
+  configuration: {}
+  downstream_blocks:
+  - stats_agg
+  executor_config: null
+  executor_type: local_python
+  has_callback: false
+  language: python
+  name: player_loader
+  retry_config: null
+  status: executed
+  timeout: null
+  type: data_loader
+  upstream_blocks:
+  - mvp_loader
+  uuid: player_loader
+- all_upstream_blocks_executed: true
+  color: null
+  configuration: {}
+  downstream_blocks: []
+  executor_config: null
+  executor_type: local_python
+  has_callback: false
+  language: python
+  name: stats_agg
+  retry_config: null
+  status: updated
+  timeout: null
+  type: transformer
+  upstream_blocks:
+  - player_loader
+  - mvp_loader
+  - team_loader
+  uuid: stats_agg
+cache_block_output_in_memory: false
+callbacks: []
+concurrency_config: {}
+conditionals: []
+created_at: '2024-12-07 23:16:40.349320+00:00'
+data_integration: null
+description: null
+executor_config: {}
+executor_count: 1
+executor_type: null
+extensions: {}
+name: nba_data_scraping
+notification_config: {}
+remote_variables_dir: null
+retry_config: {}
+run_pipeline_in_one_process: false
+settings:
+  triggers: null
+spark_config: {}
+tags: []
+type: python
+uuid: nba_data_scraping
+variables:
+  season: 2023
+  team: BOS
+variables_dir: /Users/cb/.mage_data/nba_mvp_ml
+widgets: []
