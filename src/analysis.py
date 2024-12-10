@@ -13,6 +13,7 @@ import os
 from bs4 import BeautifulSoup, Comment
 import requests
 import time
+from io import StringIO
 
 
 # player_stats_path = f'/Users/cb/src/nba_mvp_ml/data/processed/by_season/players/players_{year}.csv'
@@ -24,7 +25,7 @@ team_stats_path = f'/Users/cb/src/nba_mvp_ml/data/processed/by_season/team (bask
 mvp_votes_path = f'/Users/cb/src/nba_mvp_ml/data/processed/by_season/mvp/sentiment'
 
 def write_season(year):
-    return f'{year}-{str(year+1)[2:]}'
+    return f'{str(year)}-{str(int(year)+1)[2:]}'
 
 def fix_encoding(text):
     try:
@@ -140,8 +141,8 @@ def get_player_stats_from_mvp_html(html_content, player_name, base_url="https://
 
     
     # Step 4: Convert the table into a DataFrame
-    per_game_stats_df = pd.read_html(str(per_game_stats))[0]
-    adv_stats_df = pd.read_html(str(adv_stats))[0]
+    per_game_stats_df = pd.read_html(StringIO(str(per_game_stats)))[0]
+    adv_stats_df = pd.read_html(StringIO(str(adv_stats)))[0]
     
     return player_name, per_game_stats_df, adv_stats_df
 
@@ -224,7 +225,7 @@ def extract_table_to_dataframe(data, table_id):
     return parse_html_or_comment(soup, table_id)
 
 def load_team_misc_and_opponent(season, team):
-    team_url = f"https://www.basketball-reference.com/teams/{team}/{season}.html"
+    team_url = f"https://www.basketball-reference.com/teams/{team}/{int(season)+1}.html"
 
     data = requests.get(team_url).text
 
