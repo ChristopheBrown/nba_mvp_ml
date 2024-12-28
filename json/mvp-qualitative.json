@@ -1,0 +1,62 @@
+{
+  "1": {
+    "title": "Team Success and Playoff Position",
+    "prompt": "On a scale of 0 to 10 (0 being no influence, 10 being extremely high influence), relative to MVPs from all seasons, rate how significantly the team's success and playoff position influenced the MVP voting and results this season. Provide reasoning, including the team's win-loss record, playoff seeding, and whether the player is from a contending or struggling team. Always begin your answer with your rating on a scale from 0 to 10. Do not forget this. Format your rating like so: [[<RATING> / 10]]."
+  },
+  "2": {
+    "title": "Impact on Winning",
+    "prompt": "On a scale of 0 to 10 (0 being no influence, 10 being extremely high influence), relative to MVPs from all seasons, rate how strongly the player's individual performance contributed to their team's success. Consider game-winning moments, leadership impact on team dynamics, and how the player's absence might have affected team performance. Always begin your answer with your rating on a scale from 0 to 10. Do not forget this. Format your rating like so: [[<RATING> / 10]]."
+  },
+  "3": {
+    "title": "Narratives and Storylines",
+    "prompt": "On a scale of 0 to 10 (0 being no influence, 10 being extremely high influence), relative to MVPs from all seasons, rate the impact of compelling narratives or storylines surrounding the player. Include examples of personal achievements, overcoming adversity, or any unique season-defining moments. Always begin your answer with your rating on a scale from 0 to 10. Do not forget this. Format your rating like so: [[<RATING> / 10]]."
+  },
+  "4": {
+    "title": "Voter Fatigue",
+    "prompt": "On a scale of 0 to 10 (0 being no influence, 10 being extremely high influence), relative to MVPs from all seasons, evaluate how voter fatigue might have influenced the MVP voting. Consider whether the player is a reigning MVP or part of a dynasty and if this influenced the voters' decisions this season. Always begin your answer with your rating on a scale from 0 to 10. Do not forget this. Format your rating like so: [[<RATING> / 10]]."
+  },
+  "5": {
+    "title": "Clutch Performances",
+    "prompt": "On a scale of 0 to 10 (0 being no influence, 10 being extremely high influence), relative to MVPs from all seasons, rate the influence of the player's clutch performances in high-stakes games. Include consideration of game-winning shots, standout performances against strong teams, or critical plays in close games. Always begin your answer with your rating on a scale from 0 to 10. Do not forget this. Format your rating like so: [[<RATING> / 10]]."
+  },
+  "6": {
+    "title": "Media and Fan Sentiment",
+    "prompt": "On a scale of 0 to 10 (0 being no influence, 10 being extremely high influence), relative to MVPs from all seasons, rate how public and media sentiment influenced the MVP voting process. Include how media coverage, fan campaigns, and general public perception shaped the narrative around the player. Always begin your answer with your rating on a scale from 0 to 10. Do not forget this. Format your rating like so: [[<RATING> / 10]]."
+  },
+  "7": {
+    "title": "Leadership and Intangibles",
+    "prompt": "On a scale of 0 to 10 (0 being no influence, 10 being extremely high influence), relative to MVPs from all seasons, assess how much the player's leadership qualities and intangibles influenced the MVP decision. Consider emotional leadership, team mentoring, and overall contributions beyond measurable statistics. Always begin your answer with your rating on a scale from 0 to 10. Do not forget this. Format your rating like so: [[<RATING> / 10]]."
+  },
+  "8": {
+    "title": "Historical Significance",
+    "prompt": "On a scale of 0 to 10 (0 being no influence, 10 being extremely high influence), relative to MVPs from all seasons, rate the impact of historical significance on the MVP voting. Consider milestones, record-breaking achievements, or how the player's season is viewed in the context of NBA history. Always begin your answer with your rating on a scale from 0 to 10. Do not forget this. Format your rating like so: [[<RATING> / 10]]."
+  },
+  "9": {
+    "title": "Defying Expectations",
+    "prompt": "On a scale of 0 to 10 (0 being no influence, 10 being extremely high influence), relative to MVPs from all seasons, evaluate how much the player's ability to defy preseason expectations influenced MVP voting. Consider factors like unexpected breakout performances or exceeding team and individual expectations. Always begin your answer with your rating on a scale from 0 to 10. Do not forget this. Format your rating like so: [[<RATING> / 10]]."
+  },
+  "10": {
+    "title": "Competitor Context",
+    "prompt": "On a scale of 0 to 10 (0 being no influence, 10 being extremely high influence), relative to MVPs from all seasons, rate how much the strength of the competition for MVP influenced the results. Consider whether the race was close, if multiple players had strong seasons, or if one candidate clearly stood out. Always begin your answer with your rating on a scale from 0 to 10. Do not forget this. Format your rating like so: [[<RATING> / 10]]."
+  },
+  "11": {
+    "title": "Defensive Impact",
+    "prompt": "On a scale of 0 to 10 (0 being no influence, 10 being extremely high influence), relative to MVPs from all seasons, rate the influence of the player's defensive contributions on the MVP voting. Consider metrics like steals, blocks, and defensive rating, as well as the player's overall role as a defensive anchor. Always begin your answer with your rating on a scale from 0 to 10. Do not forget this. Format your rating like so: [[<RATING> / 10]]."
+  },
+  "12": {
+    "title": "Market Size and Visibility",
+    "prompt": "On a scale of 0 to 10 (0 being no influence, 10 being extremely high influence), relative to MVPs from all seasons, rate the extent to which market size and media visibility influenced the MVP voting. Consider whether the player's team is in a large or small market and how this affected media coverage and public awareness. Always begin your answer with your rating on a scale from 0 to 10. Do not forget this. Format your rating like so: [[<RATING> / 10]]."
+  },
+  "13": {
+    "title": "Postseason Expectations",
+    "prompt": "On a scale of 0 to 10 (0 being no influence, 10 being extremely high influence), relative to MVPs from all seasons, assess the influence of postseason expectations on the MVP decision. Consider whether voters anticipated the player leading their team to a deep playoff run or whether regular-season achievements alone were the primary factor. Always begin your answer with your rating on a scale from 0 to 10. Do not forget this. Format your rating like so: [[<RATING> / 10]]."
+  },
+  "14": {
+    "title": "Role and Usage",
+    "prompt": "On a scale of 0 to 10 (0 being no influence, 10 being extremely high influence), relative to MVPs from all seasons, evaluate the influence of the player's role and usage rate on the MVP voting. Consider how much of the team's success depended on the player’s individual contributions and their role as a primary scorer, playmaker, or defender. Always begin your answer with your rating on a scale from 0 to 10. Do not forget this. Format your rating like so: [[<RATING> / 10]]."
+  },
+  "15": {
+    "title": "Player Popularity",
+    "prompt": "On a scale of 0 to 10 (0 being no influence, 10 being extremely high influence), relative to MVPs from all seasons, rate how the player's popularity and public persona influenced the MVP results. Consider factors like fan support, charisma, and social media presence. Always begin your answer with your rating. Format your rating like so: [[<RATING> / 10]]."
+  }
+}

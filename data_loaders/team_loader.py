@@ -68,13 +68,19 @@ def append_team_stats(mvp_df, season):
 
     # Iterate through each row and add the relevant team stats
     for index, row in mvp_df.iterrows():
+        player = row["Player"]
+
         team = row["team"]
-        print(f"Fetching team data ({team}) for season: {write_season(season)}")
+        if team == "TOT":
+            print(f"{player} shown as playing for multiple teams for season: {write_season(season)}!")
+            team = 'ATL' # This ONLY applies to Dominique Wilkins as of 2024 season.
+        else:
+            print(f"Fetching team data ({team}) for season: {write_season(season)}")
         # Load team stats
         team_opps_df, misc_df = load_team_misc_and_opponent(season, team)
         # Extract the required columns and prefix them
         misc_df_subset = misc_df[columns_to_add_misc].rename(columns=prefixed_columns_misc)
-        opp_df_subset = misc_df[columns_to_add_opp].rename(columns=prefixed_columns_opp)
+        opp_df_subset = team_opps_df[columns_to_add_opp].rename(columns=prefixed_columns_opp)
 
         # Append the team stats to the player's row
         for col, value in misc_df_subset.iloc[0].items():

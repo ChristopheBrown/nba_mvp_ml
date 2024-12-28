@@ -1,0 +1,22 @@
+{
+  "1": {
+    "title": "Impact on Winning and Team Dynamics",
+    "prompt": "On a scale of 0 to 10 (0 being no influence, 10 being extraordinarily influential and rarely seen in NBA history), assess the player's overall impact on winning and team dynamics. This includes their direct contributions to their team's success, leadership on and off the court, and their ability to elevate teammates. Consider whether the team would likely collapse in the absence of this player. Be exceptionally critical: scores of 9 or 10 should be reserved for players whose impact defines a season or era. Always begin your answer with your rating on a scale from 0 to 10, formatted as: [[<RATING> / 10]]."
+  },
+  "2": {
+    "title": "Defining Individual Season Performance",
+    "prompt": "On a scale of 0 to 10 (0 being average, 10 being a historically unique performance), evaluate the significance of the player's individual season. Focus on personal milestones, statistical dominance, and singular achievements that set them apart from their peers. Scores above 8 should only be given to seasons that are unparalleled or transformative. Always begin your answer with your rating on a scale from 0 to 10, formatted as: [[<RATING> / 10]]."
+  },
+  "3": {
+    "title": "Narrative and Cultural Resonance",
+    "prompt": "On a scale of 0 to 10 (0 being no narrative influence, 10 being an all-time iconic story), evaluate the role of narrative and cultural resonance in shaping the player's candidacy. This includes compelling personal stories, milestones, or symbolic significance within the league. Consider the broader impact on fans, media, and NBA culture. Be strict: scores above 8 should only be for narratives that transcend the sport or season. Always begin your answer with your rating on a scale from 0 to 10, formatted as: [[<RATING> / 10]]."
+  },
+  "4": {
+    "title": "Two-Way Excellence",
+    "prompt": "On a scale of 0 to 10 (0 being one-dimensional, 10 being elite dominance on both ends of the floor), assess the player's two-way contributions. This includes offensive and defensive impact, as well as intangibles like versatility and situational adaptability. Consider whether the player's dominance is as evident on defense as on offense (or vice versa). Scores above 8 should only be given to players with a rare combination of elite offensive and defensive skills. Always begin your answer with your rating on a scale from 0 to 10, formatted as: [[<RATING> / 10]]."
+  },
+  "5": {
+    "title": "Clutch and High-Stakes Impact",
+    "prompt": "On a scale of 0 to 10 (0 being no notable impact, 10 being legendary clutch performances), evaluate the player's ability to deliver in high-stakes moments. This includes their performances in critical games, clutch plays under pressure, and their consistency against the strongest competition. Consider whether the player repeatedly distinguished themselves in moments that mattered most. Scores above 8 should only be for players whose clutch contributions are unforgettable and define the season. Always begin your answer with your rating on a scale from 0 to 10, formatted as: [[<RATING> / 10]]."
+  }
+}

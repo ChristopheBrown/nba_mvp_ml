@@ -16,13 +16,13 @@ import time
 from io import StringIO
 
 
-# player_stats_path = f'/Users/cb/src/nba_mvp_ml/data/processed/by_season/players/players_{year}.csv'
-# team_stats_path = f'/Users/cb/src/nba_mvp_ml/data/processed/by_season/team (basketball-reference)/team_stats_{year}_updated.csv'
-# mvp_votes_path = f'/Users/cb/src/nba_mvp_ml/data/processed/by_season/mvp/sentiment/mvp_{year}-{str(year+1)[2:]}.csv'
+# player_stats_path = f'/Users/cb/src/nba_mvp_ml/data/_processed/by_season/players/players_{year}.csv'
+# team_stats_path = f'/Users/cb/src/nba_mvp_ml/data/_processed/by_season/team (basketball-reference)/team_stats_{year}_updated.csv'
+# mvp_votes_path = f'/Users/cb/src/nba_mvp_ml/data/_processed/by_season/mvp/sentiment/mvp_{year}-{str(year+1)[2:]}.csv'
 
-player_stats_path = f'/Users/cb/src/nba_mvp_ml/data/processed/by_season/players'
-team_stats_path = f'/Users/cb/src/nba_mvp_ml/data/processed/by_season/team (basketball-reference)'
-mvp_votes_path = f'/Users/cb/src/nba_mvp_ml/data/processed/by_season/mvp/sentiment'
+player_stats_path = f'/Users/cb/src/nba_mvp_ml/data/_processed/by_season/players'
+team_stats_path = f'/Users/cb/src/nba_mvp_ml/data/_processed/by_season/team (basketball-reference)'
+mvp_votes_path = f'/Users/cb/src/nba_mvp_ml/data/_processed/by_season/mvp/sentiment'
 
 def write_season(year):
     return f'{str(year)}-{str(int(year)+1)[2:]}'
@@ -743,7 +743,7 @@ def process_mvp_stories_for_year(client, model_name, role, prompts, year, df, te
             break
 
     # Save the modified DataFrame back to the file
-    file_path = f'/Users/cb/src/nba_mvp_ml/data/processed/by_season/mvp/sentiment/mvp_{year}-{str(year+1)[2:]}.csv'
+    file_path = f'/Users/cb/src/nba_mvp_ml/data/_processed/by_season/mvp/sentiment/mvp_{year}-{str(year+1)[2:]}.csv'
     df.to_csv(file_path, index=False)
     print(f"Updated DataFrame saved to {file_path}")
 
