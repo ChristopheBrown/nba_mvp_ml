@@ -89,27 +89,39 @@ curl -X POST http://127.0.0.1:5002/predict \
 3. **Compute Costs**:
    - Optimizing the sentiment analysis to minimize API usage costs for GPT-4.
   
-## Projct Structure
+## Project Structure
+
+The project is organized into a well-structured hierarchy to ensure modularity and maintainability. Below is an overview of the key directories and their purposes:
+
+```plaintext
 nba_mvp_ml/
-├── flask_app/
-│   ├── __init__.py
-│   ├── routes.py
-│   ├── models.py
-│   ├── config.py
-│   └── utils.py
-├── notebooks/
-│   ├── data_ingestion.ipynb
-│   ├── model_training.ipynb
-│   └── api_testing.ipynb
-├── pipelines/
-│   ├── data_loaders/
-│   ├── data_exporters/
-│   └── transformers/
-├── tests/
-│   └── test_api.py
-├── Dockerfile
-├── requirements.txt
-└── README.md
+├── flask_app/               # Contains the Flask application for serving predictions
+│   ├── __init__.py          # Initializes the Flask app and sets up configurations
+│   ├── routes.py            # Defines API routes, including the `/predict` endpoint
+│   ├── models.py            # Handles model loading and interactions with MLFlow
+│   ├── utils.py             # Utility functions used across the Flask app
+│   ├── templates/           # (Optional) Holds HTML templates for any front-end components
+│   ├── static/              # (Optional) Stores static files like CSS/JS
+├── notebooks/               # Jupyter notebooks for data exploration and model experimentation
+│   ├── data_analysis.ipynb  # Notebook for analyzing raw data and generating insights
+│   ├── model_training.ipynb # Notebook for training and logging models in MLFlow
+├── pipelines/               # Mage pipeline definitions for data ingestion and processing
+│   ├── nba_data_scraping/   # Pipeline for scraping and preprocessing NBA data
+│   ├── transformations/     # Custom data transformations for feature engineering
+│   ├── data_loaders/        # Scripts for loading data from various sources
+├── mlruns/                  # MLFlow tracking directory for experiment metadata and artifacts
+├── data/                    # Contains raw and processed data files
+│   ├── raw/                 # Raw data downloaded from external sources
+│   ├── processed/           # Processed and feature-engineered datasets
+├── models/                  # Serialized machine learning models (if stored locally)
+│   ├── serialized_model.pt  # Example serialized PyTorch model
+├── Dockerfile               # Dockerfile for containerizing the Flask app and dependencies
+├── requirements.txt         # Python dependencies for the project
+├── README.md                # Comprehensive project documentation
+├── metadata.yaml            # Metadata for Mage pipelines
+├── mlflow.db                # SQLite database for MLFlow tracking (local use)
+├── .gitignore               # Specifies files and directories to be ignored by Git
+```
 
 ## Key Learnings
 
