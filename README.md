@@ -158,7 +158,3 @@ nba_mvp_ml/
 This project demonstrates the creation of an end-to-end machine learning pipeline for predicting the NBA MVP award, highlighting expertise in data engineering, machine learning, and API integration. By combining tools like Mage for data pipelines, MLFlow for model management, and Flask for API deployment, it showcases a seamless approach to solving real-world problems. 
 
 The system is designed with scalability and extensibility in mind, offering clear pathways for future enhancements such as containerization, cloud deployment, and real-time predictions. 
-
-Ultimately, this project serves as a powerful portfolio piece, demonstrating the ability to conceptualize, develop, and deploy a complex machine learning solution, making it highly relevant for machine learning engineering roles.
-
-This README is structured to highlight the project's complexity, achievements, and relevance, making it appealing to hiring managers and committees.
