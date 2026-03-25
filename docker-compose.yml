@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      MVP_MODEL_ARTIFACT_PATH: /app/mlops/artifacts/24-nn-1
+    command: ["gunicorn", "-b", "0.0.0.0:8000", "flask_app:create_app()"]
+    volumes:
+      - .:/app

@@ -51,30 +51,51 @@ The system is tailored to be a portfolio piece, highlighting skills in data engi
 
 ## Example Usage
 
-### Running the Flask API
+### Demo-ready serving (local or Docker)
+
+The packaged `24-nn-1` MLflow artifact lives under `mlops/artifacts/24-nn-1`. The quickest entry points are:
+
+#### 1. Prepare a Python 3.12 sandbox
+- Install Python 3.12 (for example, `brew install python@3.12` on macOS or use your distro’s `python3.12` package, `pyenv install 3.12.13`, etc.).
+- Create a fresh virtual environment: `python3.12 -m venv .venv312`.
+- Activate it: `source .venv312/bin/activate`.
+- Install the dependencies: `pip install -r requirements.txt`.
+- Confirm that `mlops/artifacts/24-nn-1` exists (or point `MVP_MODEL_ARTIFACT_PATH` at your packaged artifact).
+
+Running the demo with any Python interpreter older than 3.12 (the default macOS `/usr/bin/python3` is 3.9.6) currently raises `TypeError: code() takes at most 16 arguments (18 given)` inside `torch.load`. Using a 3.12 interpreter resolves that compatibility issue because the saved code objects match the artifact.
+
+#### 2. Launch the Flask service
+With the sandbox active, run `make demo`. The Makefile already exports `FLASK_RUN_PORT` and `MVP_MODEL_ARTIFACT_PATH` so the packaged artifact is picked up automatically. If you prefer to run Flask manually, use:
 ```bash
-export FLASK_APP=flask_app
-flask run --host 0.0.0.0 --port 5002
+FLASK_RUN_PORT=5000 MVP_MODEL_ARTIFACT_PATH=$(pwd)/mlops/artifacts/24-nn-1 \
+python -m flask --app flask_app run --host 0.0.0.0 --port 5000
 ```
+Once the artifact loads you will see the Werkzeug banner announcing `Running on http://127.0.0.1:5000`.
 
-### Sending a Prediction Request
-Using Python
-```python
-import requests
-import numpy as np
-
-url = "http://127.0.0.1:5002/predict"
-data = np.random.rand(1, 24).tolist()  # Replace with real input data
-response = requests.post(url, json=data)
-print(response.json())
-```
-
-Using curl
+#### 3. Hit `/predict` for a sanity check
 ```bash
-curl -X POST http://127.0.0.1:5002/predict \
--H "Content-Type: application/json" \
--d '[[-0.179, 0.214, ... ]]'
+curl -s -X POST http://127.0.0.1:5000/predict \
+  -H "Content-Type: application/json" \
+  -d '{"features": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}'
 ```
+Sample response from the zero-vector input:
+```json
+{
+  "count": 1,
+  "predictions": [[0.999840497970581, 0.00015953574620652944]]
+}
+```
+
+#### 4. Docker / gunicorn
+`make docker-demo` builds the image from `Dockerfile`, wires gunicorn, and exposes port `8000` via `docker-compose`. The compose file already wires `MVP_MODEL_ARTIFACT_PATH` so the packaged artifact is mounted by default.
+
+Full, step-by-step instructions (env vars, smoke tests, curl examples) now live in `docs/demo.md`.
+
+### Running the Flask API (legacy instructions)
+If you still want the original bare `flask run` flow, it has been retained in `docs/demo.md` under “Legacy manual run.” The same Python 3.12 sandbox works for those steps as well.
+
+### Prediction request schema
+The `/predict` endpoint expects a JSON body with a `features` array of exactly 24 floats (see `flask_app/schemas.py`). The sample call above proves the format; swap in real feature vectors as needed to reproduce MVP scores.
 
 ## Challenges Encountered
 1. **Data Complexity**: 

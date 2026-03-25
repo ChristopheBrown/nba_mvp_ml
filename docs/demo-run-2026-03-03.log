@@ -1,0 +1,47 @@
+# Demo run attempt – 2026-03-03 09:08 ET
+
+Command:
+```
+MVP_MODEL_ARTIFACT_PATH=$PWD/mlops/artifacts/24-nn-1 \
+FLASK_RUN_PORT=5050 \
+python3 -m flask --app flask_app run --host 127.0.0.1 --port 5050
+```
+
+Result (truncated):
+```
+2026/03/03 09:08:22 WARNING mlflow.pyfunc: The version of Python that the model was saved in, `Python 3.12.7`, differs from the version of Python that is currently running, `Python 3.9.6`, and may be incompatible
+...
+  File ".../mlflow/pytorch/__init__.py", line 614, in _load_model
+    pytorch_model = torch.load(model_path, **kwargs)
+  File ".../torch/serialization.py", line 1438, in _load
+    result = unpickler.load()
+TypeError: code() takes at most 16 arguments (18 given)
+```
+
+Interpretation: the packaged MLflow/PyTorch artifact was logged under Python 3.12, and the serialized code objects cannot be unpickled by the system Python 3.9 runtime on this Mac mini. A successful demo requires either (a) installing Python 3.12+ for the API process, or (b) re-exporting the model with a Python-3.9-compatible format (e.g., TorchScript/state_dict) and updating the loader.
+
+## Successful run via Python 3.12 virtual env (09:30 ET)
+Environment: `.venv312` (pyenv-managed Python 3.12.8)
+Command:
+```
+source .venv312/bin/activate
+MVP_MODEL_ARTIFACT_PATH=$PWD/mlops/artifacts/24-nn-1 \
+  FLASK_RUN_PORT=5050 \
+  python -m flask --app flask_app run --host 127.0.0.1 --port 5050
+```
+Request:
+```
+curl -s -X POST -H "Content-Type: application/json" \
+  -d '{"features": [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]}' \
+  http://127.0.0.1:5050/predict
+```
+Response:
+```
+{"count":1,"predictions":[[0.999840497970581,0.00015953574620652944]]}
+```
+Server log excerpt:
+```
+* Serving Flask app 'flask_app'
+* Running on http://127.0.0.1:5050
+INFO:werkzeug:127.0.0.1 - - "POST /predict HTTP/1.1" 200 -
+```

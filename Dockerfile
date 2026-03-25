@@ -1,17 +1,17 @@
-# Base Python image
-FROM python:3.9-slim
+FROM python:3.12-slim AS base
 
-# Set working directory
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
 WORKDIR /app
 
-# Copy project files
+COPY requirements.txt ./
+RUN pip install --upgrade pip && pip install -r requirements.txt
+
 COPY . .
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+ENV MVP_MODEL_ARTIFACT_PATH=/app/mlops/artifacts/24-nn-1
 
-# Expose port
-EXPOSE 5000
+EXPOSE 8000
 
-# Command to run the app
-CMD ["python", "run.py"]
+CMD ["gunicorn", "-b", "0.0.0.0:8000", "flask_app:create_app()"]

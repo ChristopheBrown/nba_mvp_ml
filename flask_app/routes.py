@@ -1,36 +1,43 @@
-from flask import Blueprint, request, jsonify
+from __future__ import annotations
+
+from typing import Optional
+
+import numpy as np
+from flask import Blueprint, jsonify, request
+from pydantic import ValidationError
+
 from flask_app.models import ModelHandler
-import traceback
+from flask_app.schemas import PredictionRequest
 
-# Create Flask Blueprint
 api_blueprint = Blueprint("api", __name__)
+_model_handler: Optional[ModelHandler] = None
 
-# Initialize model handler (modify `use_mlflow` as needed)
-model_handler = ModelHandler(use_mlflow=True)
-model_handler.load_model()
 
-@api_blueprint.route('/predict', methods=['POST'])
+def configure_routes(handler: ModelHandler) -> None:
+    global _model_handler
+    _model_handler = handler
+
+
+@api_blueprint.route("/predict", methods=["POST"])
 def predict():
+    if _model_handler is None:
+        return jsonify({"error": "Model handler not initialized."}), 500
+
+    payload = request.get_json(silent=True)
+    if payload is None:
+        return jsonify({"error": "Request body must be valid JSON."}), 400
+
     try:
-        # Parse input data
-        input_data = request.get_json()
-        print("Input Data:", input_data)  # Log the input for debugging
+        parsed = PredictionRequest.model_validate(payload)
+    except ValidationError as exc:
+        return (
+            jsonify({
+                "error": "Invalid payload.",
+                "details": exc.errors(include_url=False, include_context=False),
+            }),
+            400,
+        )
 
-        # Convert input to a tensor (if necessary)
-        import torch
-        input_tensor = torch.tensor(input_data, dtype=torch.float32)
-        print("Converted to Tensor:", input_tensor)
-
-        # Perform prediction using MLflow model
-        predictions = model_handler.model.predict(input_tensor.numpy())
-        print("Predictions:", predictions)
-
-        # Return predictions as JSON
-        return jsonify({"predictions": predictions.tolist()})
-
-    except Exception as e:
-        # Log the full traceback for debugging
-        traceback.print_exc()
-
-        # Return an error response
-        return jsonify({"error": str(e)}), 500
+    features = np.array([parsed.features], dtype=np.float32)
+    predictions = np.asarray(_model_handler.predict(features))
+    return jsonify({"predictions": predictions.tolist(), "count": len(predictions)})
