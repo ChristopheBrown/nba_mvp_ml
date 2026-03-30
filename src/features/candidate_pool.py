@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -10,6 +10,7 @@ import numpy as np
 from src.features.feature_builder import FeatureVector, RuntimeFeatureBuilder
 from src.features.pipeline import build_candidate_feature_rows
 from src.features.schema import FeatureSchema, load_feature_schema
+from src.monitoring import emit_metric
 
 DEFAULT_SCALER_PATH = Path("json/scaler_params_v1.json")
 POOL_DEFINITION = "top 30 by season-to-date minutes"
@@ -29,6 +30,14 @@ class CandidatePoolService:
         self.pool_definition = pool_definition
         self.scaler_path = Path(scaler_path) if scaler_path else DEFAULT_SCALER_PATH
         self.scaler_params = scaler_params or self._load_scaler_params()
+        self.scaler_version = self.scaler_params.get("version") or self._derive_scaler_version()
+
+    def _derive_scaler_version(self) -> str:
+        try:
+            timestamp = self.scaler_path.stat().st_mtime
+            return datetime.fromtimestamp(timestamp, timezone.utc).replace(microsecond=0).isoformat()
+        except OSError:
+            return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
     def _load_scaler_params(self) -> Mapping[str, Sequence[float]]:
         if not self.scaler_path.exists():
@@ -39,7 +48,10 @@ class CandidatePoolService:
         scale = payload.get("scale")
         if mean is None or scale is None:
             raise ValueError("Scaler params must contain both `mean` and `scale` arrays")
-        return {"mean": list(mean), "scale": list(scale)}
+        params: dict[str, Any] = {"mean": list(mean), "scale": list(scale)}
+        if "version" in payload:
+            params["version"] = payload.get("version")
+        return params
 
     def _build_vectors(
         self,
@@ -74,6 +86,7 @@ class CandidatePoolService:
         pool_size: int = 30,
         top_n: int = 5,
         mode: str = "latest",
+        after_id: str | None = None,
     ) -> tuple[Mapping[str, Any], list[FeatureVector]]:
         vectors, names, ids = self._build_vectors(season, pool_size)
         if not vectors:
@@ -100,21 +113,42 @@ class CandidatePoolService:
             )
 
         candidates.sort(key=lambda record: (-record["mvp_probability"], record["player_id"]))
-        snapshot_ts = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+
+        start = 0
+        if after_id:
+            for idx, record in enumerate(candidates):
+                if record["player_id"] == after_id:
+                    start = idx + 1
+                    break
+        sliced = candidates[start:]
+        selected = sliced[:top_n]
+        next_cursor = ""
+        if selected and len(sliced) > top_n:
+            next_cursor = selected[-1]["player_id"]
+
         results = []
-        for rank, candidate in enumerate(candidates[:top_n], start=1):
+        for rank_offset, candidate in enumerate(selected):
             entry = dict(candidate)
-            entry["mvp_rank"] = rank
+            entry["mvp_rank"] = start + rank_offset + 1
             results.append(entry)
+
+        emit_metric(
+            "candidate_pool_scored",
+            float(len(candidates)),
+            {"mode": mode, "season": str(season or "latest")},
+        )
 
         payload = {
             "mode": mode,
             "feature_schema_version": self.schema.version,
+            "scaler_version": self.scaler_version,
             "candidate_pool": {
                 "definition": self.pool_definition,
                 "pool_size": len(candidates),
                 "top_n": top_n,
-                "snapshot_timestamp": snapshot_ts,
+                "snapshot_timestamp": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+                "after_id": after_id,
+                "next_cursor": next_cursor,
             },
             "results": results,
         }

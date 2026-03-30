@@ -41,7 +41,13 @@ def predict():
 
     features = np.array([parsed.features], dtype=np.float32)
     predictions = np.asarray(_model_handler.predict(features))
-    return jsonify({"predictions": predictions.tolist(), "count": len(predictions)})
+    return jsonify(
+        {
+            "predictions": predictions.tolist(),
+            "count": len(predictions),
+            "model_version": _model_handler.model_version,
+        }
+    )
 
 
 @api_blueprint.route("/candidate_pool", methods=["GET"])
@@ -67,6 +73,7 @@ def candidate_pool():
         return jsonify({"error": "`pool_size` must be an integer."}), 400
 
     mode = request.args.get("mode", "latest")
+    cursor = request.args.get("cursor")
 
     service = CandidatePoolService(handler=_model_handler)
     try:
@@ -75,8 +82,10 @@ def candidate_pool():
             pool_size=pool_size,
             top_n=top_n,
             mode=mode,
+            after_id=cursor,
         )
     except Exception as exc:  # noqa: BLE001
         return jsonify({"error": str(exc)}), 500
 
+    payload["model_version"] = _model_handler.model_version
     return jsonify(payload)

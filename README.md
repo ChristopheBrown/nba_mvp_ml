@@ -66,11 +66,17 @@ The system is tailored to be a portfolio piece, highlighting skills in data engi
 
 - **CLI export**: `scripts/build_candidate_pool_vectors.py --season <year> --pool-size 30 --top-n 5` fits the training scaler, normalizes the pool, scores the MVP model, and writes both the ranking payload (`data_exporters/candidate_pool/latest_candidate_pool.json`) and the schema-aligned feature vectors (`data_exporters/candidate_pool/candidate_feature_vectors.json`). It also refreshes `json/scaler_params_v1.json` so the runtime builder stays synchronized.
 
-- **HTTP endpoint**: `GET /candidate_pool` (query params: `top_n`, `pool_size`, `season`, `mode`). The response contains `candidate_pool` metadata plus the ranked `results` array (each entry includes `player_id`, `player_name`, `mvp_probability`, `not_mvp_probability`, `mvp_rank`, and the builder metadata). Use this for dashboards or gating exports that rely on the normalized vectors.
+- **HTTP endpoint**: `GET /candidate_pool` (query params: `top_n`, `pool_size`, `season`, `mode`, `cursor`). The response includes `feature_schema_version`, `scaler_version`, `model_version`, deterministic metadata (`pool_size`, `next_cursor`, `snapshot_timestamp`), and the ranked `results` array (each entry includes `player_id`, `player_name`, `mvp_probability`, `not_mvp_probability`, `mvp_rank`, and the builder metadata). Supply `cursor` to page through the sorted pool in a keyset-friendly way.
 
 ## Testing and Validation
 
 - **Contract checks**: `tests/test_feature_builder.py` proves the runtime builder raises helpful errors when features are missing, preserves metadata through batch builds, and applies normalization when scaler params are provided.
+
+## API Contracts & Monitoring
+
+- **/predict**: Accepts the 24-float schema and returns `predictions`, `count`, and `model_version` so clients know exactly which artifact generated the score.
+- **/candidate_pool**: Returns `feature_schema_version`, `scaler_version`, `model_version`, pagination tokens (`cursor`/`next_cursor`), and the deterministic ranked `results` array. Clients can re-run the CLI export or hit this endpoint with `cursor` to stream the top-N rankings consistently.
+- **Monitoring hooks**: `src/monitoring.py` emits structured metric logs that drive dashboards or Prometheus-style exporters. Current metric names include `stats_rows_loaded`, `sentiment_entries_processed`, `sentiment_missing_keys`, and `candidate_pool_scored`, covering the stats/sentiment ingestion and the candidate-pool scoring runs.
 
 ## Example Usage
 

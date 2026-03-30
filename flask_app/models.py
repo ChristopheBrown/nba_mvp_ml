@@ -15,6 +15,7 @@ class ModelHandler:
     def __init__(self, runtime_settings: Optional[Settings] = None) -> None:
         self._settings = runtime_settings or settings
         self.model = None
+        self._model_version: str | None = None
 
     def load_model(self):
         if self.model is not None:
@@ -28,7 +29,7 @@ class ModelHandler:
                     f"Packaged model artifact not found at {artifact_path}. "
                     "Run the packaging step or set MVP_MLFLOW_MODEL_URI."
                 )
-
+        self._model_version = Path(target).name
         self.model = mlflow.pyfunc.load_model(target)
         return self.model
 
@@ -36,3 +37,7 @@ class ModelHandler:
         if self.model is None:
             self.load_model()
         return self.model.predict(input_array)
+
+    @property
+    def model_version(self) -> str:
+        return self._model_version or "unknown"

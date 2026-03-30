@@ -9,12 +9,29 @@ import numpy as np
 import pandas as pd
 
 from src.features.schema import FeatureSchema, load_feature_schema
+from src.monitoring import emit_metric
 
 logger = logging.getLogger(__name__)
 
 STATS_DICT_PATH = Path("data/raw/tmp_backup/seasons_Totals")
 SENTIMENT_PATH = Path("json/sample_sentiment_scores.json")
 SENTIMENT_KEYS = [f"sentiment_{i}" for i in range(1, 16)]
+REQUIRED_STATS_COLUMNS = [
+    "PLAYER_ID",
+    "PLAYER_FULLNAME",
+    "TEAM_ID",
+    "TEAM_ABBREVIATION",
+    "MIN",
+    "PTS",
+    "AST",
+    "REB",
+    "TOV",
+    "STL",
+    "BLK",
+    "GP",
+    "FGA",
+    "FTA",
+]
 DEFAULT_SENTIMENT_VALUE = 5.0
 _STATS_CACHE: dict[str, dict[int, pd.DataFrame]] = {}
 
@@ -57,7 +74,19 @@ def _load_season_stats(season: int | None = None) -> pd.DataFrame:
         season = max(stats.keys())
     if season not in stats:
         raise ValueError(f"Season {season} is not available in {STATS_DICT_PATH}")
-    return stats[season].copy()
+    df = stats[season].copy()
+    _validate_stats_columns(df)
+    emit_metric("stats_rows_loaded", float(len(df)), {"season": str(season)})
+    return df
+
+
+def _validate_stats_columns(df: pd.DataFrame) -> None:
+    missing = [col for col in REQUIRED_STATS_COLUMNS if col not in df.columns]
+    if missing:
+        logger.warning(
+            "Missing required stats columns: %s",
+            missing,
+        )
 
 
 def _aggregate_team_stats(player_df: pd.DataFrame) -> pd.DataFrame:
@@ -163,14 +192,27 @@ def load_sentiment_scores(path: Path | None = None) -> Mapping[str, Mapping[str,
 
     payload = json.loads(file_path.read_text(encoding="utf-8"))
     mapping: dict[str, Mapping[str, float]] = {}
+    missing_keys = 0
     for entry in payload:
         player_name = str(entry.get("player_fullname", "")).strip().upper()
         if not player_name:
             continue
         scores = entry.get("scores", {})
+        missing = [key for key in SENTIMENT_KEYS if key not in scores]
+        missing_keys += len(missing)
         mapping[player_name] = {
             key: float(scores.get(key, DEFAULT_SENTIMENT_VALUE)) for key in SENTIMENT_KEYS
         }
+    emit_metric(
+        "sentiment_entries_processed",
+        float(len(mapping)),
+        {"source": file_path.name},
+    )
+    emit_metric(
+        "sentiment_missing_keys",
+        float(missing_keys),
+        {"source": file_path.name},
+    )
     return mapping
 
 

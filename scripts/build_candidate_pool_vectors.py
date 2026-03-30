@@ -7,6 +7,7 @@ import argparse
 import json
 import logging
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Sequence
 
@@ -78,6 +79,8 @@ def main() -> None:
     logging.basicConfig(level=getattr(logging, args.log_level.upper(), "INFO"), format="[%(levelname)s] %(message)s")
 
     scaler_params = compute_scaler_params(season=args.season, pool_size=args.pool_size)
+    scaler_version = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    scaler_params["version"] = scaler_version
     write_json(args.scaler_output, scaler_params)
 
     handler = ModelHandler()

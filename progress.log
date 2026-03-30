@@ -17221,3 +17221,35 @@ context:
 - candidate pool: rerun scripts/player_mvp_pipeline.py to materialize the nightly top-30 minute leaders, refresh deterministic scoring caches in data_exporters/candidate_pool/, and stage the ranked outputs that feed the gating and API delivery paths documented in docs/agent-execution-plan.md.
 - docs/agent-checklist.md: mirror the runtime feature builder and candidate pool verification steps, call out release-ready checkpoints (instrumentation smokes, candidate pool rerun, gating sign-off), and surface the immediate follow-up so the next cron log can pick up where this entry leaves off.
 ---
+2026-03-30T17:43:33Z
+branch: feature/demo-ready-serving
+status: ## feature/demo-ready-serving
+M  README.md
+M  docs/agent-checklist.md
+A  docs/subagent-feedback.md
+M  flask_app/models.py
+M  flask_app/routes.py
+M  json/scaler_params_v1.json
+M  scripts/build_candidate_pool_vectors.py
+M  src/features/candidate_pool.py
+M  src/features/pipeline.py
+A  src/monitoring.py
+A  tests/test_api_contract.py
+M  tests/test_candidate_pool.py
+?? docs/agent-checklist-summary.md
+?? docs/agent-checklist-summary.pdf
+?? docs/managerial-execution-plan.md
+?? docs/managerial-execution-plan.pdf
+last_commit: 47552da feat: add candidate pool ranking service
+files_summary:
+## feature/demo-ready-serving
+M  README.md
+M  docs/agent-checklist.md
+A  docs/subagent-feedback.md
+M  flask_app/models.py
+recent_work: finalized runtime feature builder instrumentation verification, refreshed the candidate pool ranking service, and noted docs/agent-checklist.md sync for the gating handoff.
+context:
+- runtime feature builder: reconfirmed json/feature_schema_v1.json metadata flows through data_loaders/stats_sentiment_loader, src/analysis.py::load_and_preprocess_data(), and src/features.RuntimeFeatureBuilder so runtime vectors keep scaler provenance locked ahead of the next scoring cadence.
+- candidate pool: reran scripts/player_mvp_pipeline.py under Python 3.12 to refresh the deterministic top-30 exports, repopulate data_exporters/candidate_pool/ caches, and tie the new /candidate_pool snapshots to today's gating-ready status.
+- docs/agent-checklist.md: synced docs/agent-checklist.md to the runtime instrumentation and candidate pool verification updates so this checklist matches today's progress.log entry and highlights the immediate follow-up for the next window.
+---
