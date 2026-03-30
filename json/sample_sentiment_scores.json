@@ -1,0 +1,128 @@
+[
+  {
+    "player_fullname": "LUKA DONCIC",
+    "timestamp": "2026-03-30T00:00:00Z",
+    "scores": {
+      "sentiment_1": 9,
+      "sentiment_2": 9,
+      "sentiment_3": 8,
+      "sentiment_4": 7,
+      "sentiment_5": 8,
+      "sentiment_6": 9,
+      "sentiment_7": 7,
+      "sentiment_8": 8,
+      "sentiment_9": 9,
+      "sentiment_10": 8,
+      "sentiment_11": 8,
+      "sentiment_12": 7,
+      "sentiment_13": 9,
+      "sentiment_14": 8,
+      "sentiment_15": 8
+    }
+  },
+  {
+    "player_fullname": "NIKOLA JOKIC",
+    "timestamp": "2026-03-30T00:00:00Z",
+    "scores": {
+      "sentiment_1": 9,
+      "sentiment_2": 8,
+      "sentiment_3": 9,
+      "sentiment_4": 7,
+      "sentiment_5": 8,
+      "sentiment_6": 8,
+      "sentiment_7": 7,
+      "sentiment_8": 9,
+      "sentiment_9": 8,
+      "sentiment_10": 7,
+      "sentiment_11": 9,
+      "sentiment_12": 8,
+      "sentiment_13": 9,
+      "sentiment_14": 9,
+      "sentiment_15": 8
+    }
+  },
+  {
+    "player_fullname": "STEPH CURRY",
+    "timestamp": "2026-03-30T00:00:00Z",
+    "scores": {
+      "sentiment_1": 8,
+      "sentiment_2": 7,
+      "sentiment_3": 9,
+      "sentiment_4": 6,
+      "sentiment_5": 8,
+      "sentiment_6": 8,
+      "sentiment_7": 7,
+      "sentiment_8": 8,
+      "sentiment_9": 8,
+      "sentiment_10": 7,
+      "sentiment_11": 8,
+      "sentiment_12": 6,
+      "sentiment_13": 8,
+      "sentiment_14": 7,
+      "sentiment_15": 7
+    }
+  },
+  {
+    "player_fullname": "LEBRON JAMES",
+    "timestamp": "2026-03-30T00:00:00Z",
+    "scores": {
+      "sentiment_1": 8,
+      "sentiment_2": 9,
+      "sentiment_3": 8,
+      "sentiment_4": 7,
+      "sentiment_5": 9,
+      "sentiment_6": 9,
+      "sentiment_7": 8,
+      "sentiment_8": 8,
+      "sentiment_9": 8,
+      "sentiment_10": 8,
+      "sentiment_11": 9,
+      "sentiment_12": 8,
+      "sentiment_13": 8,
+      "sentiment_14": 8,
+      "sentiment_15": 9
+    }
+  },
+  {
+    "player_fullname": "JAYLEN BROWN",
+    "timestamp": "2026-03-30T00:00:00Z",
+    "scores": {
+      "sentiment_1": 7,
+      "sentiment_2": 6,
+      "sentiment_3": 7,
+      "sentiment_4": 6,
+      "sentiment_5": 6,
+      "sentiment_6": 7,
+      "sentiment_7": 6,
+      "sentiment_8": 7,
+      "sentiment_9": 7,
+      "sentiment_10": 6,
+      "sentiment_11": 6,
+      "sentiment_12": 6,
+      "sentiment_13": 7,
+      "sentiment_14": 7,
+      "sentiment_15": 6
+    }
+  },
+  {
+    "player_fullname": "GIANNIS ANTETOKOUNMPO",
+    "timestamp": "2026-03-30T00:00:00Z",
+    "scores": {
+      "sentiment_1": 9,
+      "sentiment_2": 8,
+      "sentiment_3": 9,
+      "sentiment_4": 8,
+      "sentiment_5": 9,
+      "sentiment_6": 9,
+      "sentiment_7": 8,
+      "sentiment_8": 9,
+      "sentiment_9": 9,
+      "sentiment_10": 8,
+      "sentiment_11": 9,
+      "sentiment_12": 8,
+      "sentiment_13": 9,
+      "sentiment_14": 9,
+      "sentiment_15": 9
+    }
+  }
+]

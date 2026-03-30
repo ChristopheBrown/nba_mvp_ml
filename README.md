@@ -14,6 +14,7 @@ The system is tailored to be a portfolio piece, highlighting skills in data engi
 2. **End-to-End Solution**: Integrate data pipelines, machine learning models, and APIs into a cohesive architecture.
 3. **Portfolio Value**: Showcase the ability to design, develop, and deploy complex ML systems.
 4. **Real-Time Potential**: Lay the groundwork for real-time predictions and data ingestion.
+5. **Feature Contract Discipline**: Maintain an explicit schema (see `json/feature_schema_v1.json`) and runtime builder (`src/features/feature_builder.py`) so scoring vectors always match the locked v1 order and normalization expectations.
 
 ---
 
@@ -48,6 +49,19 @@ The system is tailored to be a portfolio piece, highlighting skills in data engi
 - **Project Structure**: Organized project files to separate concerns effectively, from data ingestion to model deployment.
 
 ---
+
+## Runtime Feature Builder
+
+- **Schema contract**: `json/feature_schema_v1.json` locks the ordered 24-feature vector for the MVP model and documents which stats, advanced metrics, and sentiment signals are expected in each position.
+- **Runtime enforcement**: `src/features/feature_builder.py` consumes the schema artifact (plus optional `mean`/`scale` arrays) to validate inputs, normalize using stored scaler parameters, and emit `FeatureVector` records that carry metadata for inspection before scoring.
+- **Demo script**: `scripts/build_runtime_feature_vectors.py` accepts player feature mappings (examples live in `json/sample_player_features.json`) and writes normalized vectors to disk so you can verify schema adherence without ingesting the entire data lake.
+- **Runtime pipeline**: `src/features/pipeline.py` loads the season totals, derives TAP-level stats (PER, BPM, Win Shares, TOV%, ORtg, etc.), and merges the sample sentiment bundle at `json/sample_sentiment_scores.json` so runtime vectors stay aligned with the locked schema.
+- **Candidate builder**: `scripts/build_candidate_pool_vectors.py --season 2023 --top-n 30` (or adjust the season) materializes both `output/candidate_feature_vectors.json` and the latest `json/scaler_params_v1.json`, giving the runtime feature builder the normalization parameters it needs before scoring.
+
+
+## Testing and Validation
+
+- **Contract checks**: `tests/test_feature_builder.py` proves the runtime builder raises helpful errors when features are missing, preserves metadata through batch builds, and applies normalization when scaler params are provided.
 
 ## Example Usage
 

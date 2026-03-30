@@ -1,0 +1,70 @@
+[
+  {
+    "player_id": "P000",
+    "player_name": "Demo Player 0.0",
+    "features": {
+      "FGM": 1.0,
+      "BPM": 2.0,
+      "DRBPct": 3.0,
+      "DWS": 4.0,
+      "OBPM": 5.0,
+      "PER": 6.0,
+      "TOVPct": 7.0,
+      "VORP": 8.0,
+      "WS/48_x": 9.0,
+      "Rk_opp_pg": 10.0,
+      "2P%_opp_pg": 11.0,
+      "DRB_opp_pg": 12.0,
+      "SRS": 13.0,
+      "ORtg": 14.0,
+      "sentiment_1": 15.0,
+      "sentiment_2": 16.0,
+      "sentiment_3": 17.0,
+      "sentiment_5": 18.0,
+      "sentiment_6": 19.0,
+      "sentiment_8": 20.0,
+      "sentiment_13": 21.0,
+      "sentiment_14": 22.0,
+      "sentiment_avg": 23.0,
+      "WS": 24.0
+    },
+    "metadata": {
+      "demo": true,
+      "note": "feature builder sample"
+    }
+  },
+  {
+    "player_id": "P250",
+    "player_name": "Demo Player 2.5",
+    "features": {
+      "FGM": 3.5,
+      "BPM": 4.5,
+      "DRBPct": 5.5,
+      "DWS": 6.5,
+      "OBPM": 7.5,
+      "PER": 8.5,
+      "TOVPct": 9.5,
+      "VORP": 10.5,
+      "WS/48_x": 11.5,
+      "Rk_opp_pg": 12.5,
+      "2P%_opp_pg": 13.5,
+      "DRB_opp_pg": 14.5,
+      "SRS": 15.5,
+      "ORtg": 16.5,
+      "sentiment_1": 17.5,
+      "sentiment_2": 18.5,
+      "sentiment_3": 19.5,
+      "sentiment_5": 20.5,
+      "sentiment_6": 21.5,
+      "sentiment_8": 22.5,
+      "sentiment_13": 23.5,
+      "sentiment_14": 24.5,
+      "sentiment_avg": 25.5,
+      "WS": 26.5
+    },
+    "metadata": {
+      "demo": true,
+      "note": "feature builder sample"
+    }
+  }
+]
