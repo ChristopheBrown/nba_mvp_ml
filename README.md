@@ -51,6 +51,8 @@ The system is tailored to be a portfolio piece, highlighting skills in data engi
 ---
 
 ## Runtime Feature Builder
+- **Candidate pool ranking**: `scripts/build_candidate_pool_vectors.py` builds the normalized vectors, saves the latest scaler params (`json/scaler_params_v1.json`), and exports the top `N` candidate probabilities + feature vectors under `data_exporters/candidate_pool/`. Use the script (or a cron job) to refresh the ranking artifacts before pushing API updates.
+
 
 - **Schema contract**: `json/feature_schema_v1.json` locks the ordered 24-feature vector for the MVP model and documents which stats, advanced metrics, and sentiment signals are expected in each position.
 - **Runtime enforcement**: `src/features/feature_builder.py` consumes the schema artifact (plus optional `mean`/`scale` arrays) to validate inputs, normalize using stored scaler parameters, and emit `FeatureVector` records that carry metadata for inspection before scoring.
@@ -58,6 +60,13 @@ The system is tailored to be a portfolio piece, highlighting skills in data engi
 - **Runtime pipeline**: `src/features/pipeline.py` loads the season totals, derives TAP-level stats (PER, BPM, Win Shares, TOV%, ORtg, etc.), and merges the sample sentiment bundle at `json/sample_sentiment_scores.json` so runtime vectors stay aligned with the locked schema.
 - **Candidate builder**: `scripts/build_candidate_pool_vectors.py --season 2023 --top-n 30` (or adjust the season) materializes both `output/candidate_feature_vectors.json` and the latest `json/scaler_params_v1.json`, giving the runtime feature builder the normalization parameters it needs before scoring.
 
+
+
+## Candidate Pool Rankings
+
+- **CLI export**: `scripts/build_candidate_pool_vectors.py --season <year> --pool-size 30 --top-n 5` fits the training scaler, normalizes the pool, scores the MVP model, and writes both the ranking payload (`data_exporters/candidate_pool/latest_candidate_pool.json`) and the schema-aligned feature vectors (`data_exporters/candidate_pool/candidate_feature_vectors.json`). It also refreshes `json/scaler_params_v1.json` so the runtime builder stays synchronized.
+
+- **HTTP endpoint**: `GET /candidate_pool` (query params: `top_n`, `pool_size`, `season`, `mode`). The response contains `candidate_pool` metadata plus the ranked `results` array (each entry includes `player_id`, `player_name`, `mvp_probability`, `not_mvp_probability`, `mvp_rank`, and the builder metadata). Use this for dashboards or gating exports that rely on the normalized vectors.
 
 ## Testing and Validation
 

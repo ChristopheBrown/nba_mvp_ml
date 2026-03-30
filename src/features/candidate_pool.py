@@ -1,0 +1,121 @@
+from __future__ import annotations
+
+import json
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Mapping, Sequence
+
+import numpy as np
+
+from src.features.feature_builder import FeatureVector, RuntimeFeatureBuilder
+from src.features.pipeline import build_candidate_feature_rows
+from src.features.schema import FeatureSchema, load_feature_schema
+
+DEFAULT_SCALER_PATH = Path("json/scaler_params_v1.json")
+POOL_DEFINITION = "top 30 by season-to-date minutes"
+
+
+class CandidatePoolService:
+    def __init__(
+        self,
+        handler: Any,
+        schema: FeatureSchema | None = None,
+        scaler_path: Path | None = None,
+        scaler_params: Mapping[str, Sequence[float]] | None = None,
+        pool_definition: str = POOL_DEFINITION,
+    ) -> None:
+        self.handler = handler
+        self.schema = schema or load_feature_schema()
+        self.pool_definition = pool_definition
+        self.scaler_path = Path(scaler_path) if scaler_path else DEFAULT_SCALER_PATH
+        self.scaler_params = scaler_params or self._load_scaler_params()
+
+    def _load_scaler_params(self) -> Mapping[str, Sequence[float]]:
+        if not self.scaler_path.exists():
+            raise FileNotFoundError(f"Scaler params not found at {self.scaler_path}")
+        with self.scaler_path.open("r", encoding="utf-8") as fh:
+            payload = json.load(fh)
+        mean = payload.get("mean")
+        scale = payload.get("scale")
+        if mean is None or scale is None:
+            raise ValueError("Scaler params must contain both `mean` and `scale` arrays")
+        return {"mean": list(mean), "scale": list(scale)}
+
+    def _build_vectors(
+        self,
+        season: int | None,
+        pool_size: int,
+    ) -> tuple[list[FeatureVector], list[str], list[str]]:
+        rows, names, ids, metadata = build_candidate_feature_rows(
+            season=season,
+            top_n=pool_size,
+            schema=self.schema,
+        )
+        builder = RuntimeFeatureBuilder(schema=self.schema, scaler_params=self.scaler_params)
+        vectors: list[FeatureVector] = []
+        built_names: list[str] = []
+        built_ids: list[str] = []
+        for row, player_name, player_id, meta in zip(rows, names, ids, metadata):
+            vectors.append(
+                builder.build_vector(
+                    player_name=player_name,
+                    named_features=row,
+                    player_id=player_id,
+                    metadata=meta,
+                )
+            )
+            built_names.append(player_name)
+            built_ids.append(player_id)
+        return vectors, built_names, built_ids
+
+    def build_candidate_pool(
+        self,
+        season: int | None = None,
+        pool_size: int = 30,
+        top_n: int = 5,
+        mode: str = "latest",
+    ) -> tuple[Mapping[str, Any], list[FeatureVector]]:
+        vectors, names, ids = self._build_vectors(season, pool_size)
+        if not vectors:
+            raise ValueError("No candidate vectors built for the pool")
+
+        matrix = np.asarray([vector.vector for vector in vectors], dtype=np.float32)
+        self.handler.load_model()
+        predictions = np.asarray(self.handler.predict(matrix))
+        if predictions.ndim != 2 or predictions.shape[1] != 2:
+            raise ValueError("Model output must contain [not_mvp, mvp] probabilities")
+
+        candidates = []
+        for idx, vector in enumerate(vectors):
+            p_not, p_mvp = predictions[idx]
+            candidates.append(
+                {
+                    "player_id": ids[idx] or "",
+                    "player_name": names[idx],
+                    "mvp_probability": float(p_mvp),
+                    "not_mvp_probability": float(p_not),
+                    "vector": vector.vector.tolist(),
+                    "metadata": vector.metadata,
+                }
+            )
+
+        candidates.sort(key=lambda record: (-record["mvp_probability"], record["player_id"]))
+        snapshot_ts = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+        results = []
+        for rank, candidate in enumerate(candidates[:top_n], start=1):
+            entry = dict(candidate)
+            entry["mvp_rank"] = rank
+            results.append(entry)
+
+        payload = {
+            "mode": mode,
+            "feature_schema_version": self.schema.version,
+            "candidate_pool": {
+                "definition": self.pool_definition,
+                "pool_size": len(candidates),
+                "top_n": top_n,
+                "snapshot_timestamp": snapshot_ts,
+            },
+            "results": results,
+        }
+        return payload, vectors
