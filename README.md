@@ -77,6 +77,20 @@ The system is tailored to be a portfolio piece, highlighting skills in data engi
 - **/predict**: Accepts the 24-float schema and returns `predictions`, `count`, and `model_version` so clients know exactly which artifact generated the score.
 - **/candidate_pool**: Returns `feature_schema_version`, `scaler_version`, `model_version`, pagination tokens (`cursor`/`next_cursor`), and the deterministic ranked `results` array. Clients can re-run the CLI export or hit this endpoint with `cursor` to stream the top-N rankings consistently.
 - **Monitoring hooks**: `src/monitoring.py` emits structured metric logs that drive dashboards or Prometheus-style exporters. Current metric names include `stats_rows_loaded`, `sentiment_entries_processed`, `sentiment_missing_keys`, and `candidate_pool_scored`, covering the stats/sentiment ingestion and the candidate-pool scoring runs.
+- **Control widgets**: `POST /pipeline/vector-builder` and `POST /pipeline/export-candidate-pool` run the vector builder or candidate pool exports inside `.venv312`, returning the raw logs and return codes; `GET /monitoring/metrics` surfaces the latest instrumentation records.
+- **Local UI plan**: `docs/ui-plan.md` now captures the React/Vite-powered localhost control panel with pipeline controls, monitoring metrics, and the candidate table.
+
+## Local UI Dashboard
+
+The React + Vite SPA under `ui-app/` proxies to the Flask backend to run scripts, view rankings, and monitor metrics.
+
+```bash
+cd ui-app
+npm install
+npm run dev
+```
+
+The Vite dev server proxies `/predict`, `/candidate_pool`, `/pipeline/*`, and `/monitoring/*` to `http://localhost:5000` (see `ui-app/vite.config.js`). When ready for production, run `npm run build` and copy `ui-app/dist` into `flask_app/static/ui`, or point `/ui` (new control blueprint) at that directory.
 
 ## Example Usage
 
