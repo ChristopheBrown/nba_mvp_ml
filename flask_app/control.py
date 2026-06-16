@@ -38,17 +38,23 @@ def _run_script(command: list[str], env: Any | None = None) -> dict[str, Any]:
 
 
 @control_bp.route("/ui", methods=["GET"])
-def serve_ui():
+@control_bp.route("/ui/<path:asset_path>", methods=["GET"])
+def serve_ui(asset_path: str = "index.html"):
     dist = PROJECT_ROOT / "ui-app" / "dist"
-    if dist.exists():
-        return send_from_directory(dist, "index.html")
-    return (
-        jsonify({
-            "error": "UI not built",
-            "instructions": "cd ui-app && npm install && npm run build",
-        }),
-        404,
-    )
+    if not dist.exists():
+        return (
+            jsonify({
+                "error": "UI not built",
+                "instructions": "cd ui-app && npm install && npm run build",
+            }),
+            404,
+        )
+
+    requested = (dist / asset_path).resolve()
+    if asset_path != "index.html" and requested.exists() and requested.is_file() and dist.resolve() in requested.parents:
+        return send_from_directory(dist, asset_path)
+
+    return send_from_directory(dist, "index.html")
 
 
 @control_bp.route("/pipeline/vector-builder", methods=["POST"])
@@ -74,7 +80,7 @@ def candidate_pool_export():
     pool_size = json_payload.get("pool_size", 30)
     top_n = json_payload.get("top_n", 5)
     mode = json_payload.get("mode", "latest")
-    args = [str(VENV_PYTHON), str(SCRIPTS_DIR / "build_candidate_pool_vectors.py"), "--pool-size", str(pool_size), "--top-n", str(top_n), "--output", "data_exporters/candidate_pool/ranking.json", "--vectors-output", "data_exporters/candidate_pool/candidate_feature_vectors.json"]
+    args = [str(VENV_PYTHON), str(SCRIPTS_DIR / "build_candidate_pool_vectors.py"), "--pool-size", str(pool_size), "--top-n", str(top_n), "--ranking-output", "data_exporters/candidate_pool/ranking.json", "--vectors-output", "data_exporters/candidate_pool/candidate_feature_vectors.json"]
     if season is not None:
         args.extend(["--season", str(season)])
     result = _run_script(args)

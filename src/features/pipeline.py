@@ -67,6 +67,18 @@ POSTSEASON_NARRATIVE_PLAYERS = {
     },
 }
 FORCE_INCLUDED_PLAYER_NAMES = tuple(POSTSEASON_NARRATIVE_PLAYERS.keys())
+DEFAULT_POOL_SIZE = 50
+POOL_DEFINITION = "top MVP candidates by blended production, availability, and minutes"
+POOL_SCORE_WEIGHTS = {
+    "MIN": 0.30,
+    "PTS": 0.20,
+    "REB": 0.10,
+    "AST": 0.10,
+    "WS": 0.10,
+    "BPM": 0.10,
+    "VORP": 0.05,
+    "PER": 0.05,
+}
 REQUIRED_STATS_COLUMNS = [
     "PLAYER_ID",
     "PLAYER_FULLNAME",
@@ -287,10 +299,22 @@ def _sentiment_for_player(player_name: str, sentiment_map: Mapping[str, Mapping[
     return values, avg
 
 
+def _score_candidate_pool(player_df: pd.DataFrame) -> pd.DataFrame:
+    score = pd.Series(0.0, index=player_df.index, dtype=float)
+    for column, weight in POOL_SCORE_WEIGHTS.items():
+        if column not in player_df.columns:
+            continue
+        score += player_df[column].rank(method="average", pct=True) * weight
+    scored = player_df.copy()
+    scored["pool_score"] = score
+    return scored
+
+
 def build_candidate_feature_rows(
     season: int | None = None,
-    top_n: int = 30,
+    top_n: int = DEFAULT_POOL_SIZE,
     schema: FeatureSchema | None = None,
+    historical_mode: bool = False,
 ) -> tuple[list[Mapping[str, float]], list[str], list[str], list[Mapping[str, Any]]]:
     schema = schema or load_feature_schema()
     season = season or _latest_season()
@@ -303,18 +327,19 @@ def build_candidate_feature_rows(
     player_df = calculate_win_shares(player_df, team_stats_dict)
     player_df = calculate_bpm(player_df, team_stats_dict)
     player_df = _augment_player_metrics(player_df)
+    player_df = _score_candidate_pool(player_df)
 
-    ranked_by_minutes = player_df.sort_values("MIN", ascending=False)
-    candidate_df = ranked_by_minutes.head(top_n)
+    candidate_df = player_df.sort_values(["pool_score", "MIN"], ascending=[False, False]).head(top_n)
 
-    forced_mask = player_df["PLAYER_FULLNAME"].astype(str).str.strip().str.upper().isin(FORCE_INCLUDED_PLAYER_NAMES)
-    forced_players = player_df.loc[forced_mask]
-    if not forced_players.empty:
-        candidate_df = (
-            pd.concat([candidate_df, forced_players], ignore_index=False)
-            .drop_duplicates(subset=["PLAYER_ID"], keep="first")
-            .sort_values("MIN", ascending=False)
-        )
+    if not historical_mode:
+        forced_mask = player_df["PLAYER_FULLNAME"].astype(str).str.strip().str.upper().isin(FORCE_INCLUDED_PLAYER_NAMES)
+        forced_players = player_df.loc[forced_mask]
+        if not forced_players.empty:
+            candidate_df = (
+                pd.concat([candidate_df, forced_players], ignore_index=False)
+                .drop_duplicates(subset=["PLAYER_ID"], keep="first")
+                .sort_values(["pool_score", "MIN"], ascending=[False, False])
+            )
 
     sentiment_map = load_sentiment_scores()
 
@@ -325,6 +350,9 @@ def build_candidate_feature_rows(
 
     for _, row in candidate_df.iterrows():
         sentiment_values, sentiment_avg = _sentiment_for_player(row.get("PLAYER_FULLNAME"), sentiment_map)
+        if historical_mode:
+            sentiment_values = {key: DEFAULT_SENTIMENT_VALUE for key in SENTIMENT_KEYS}
+            sentiment_avg = DEFAULT_SENTIMENT_VALUE
         base_values: dict[str, float] = {
             "FGM": _safe_float(row.get("FGM_pg")),
             "BPM": _safe_float(row.get("BPM")),
@@ -355,6 +383,7 @@ def build_candidate_feature_rows(
                 "season": season,
                 "team": row.get("TEAM_ABBREVIATION"),
                 "minutes": _safe_float(row.get("MIN")),
+                "pool_score": _safe_float(row.get("pool_score")),
             }
         )
 

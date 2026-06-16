@@ -17,6 +17,7 @@ function App() {
   const [candidates, setCandidates] = useState([]);
   const [metrics, setMetrics] = useState([]);
   const [loadingCandidates, setLoadingCandidates] = useState(false);
+  const [candidateError, setCandidateError] = useState("");
 
   useEffect(() => {
     fetchCandidates();
@@ -25,53 +26,83 @@ function App() {
 
   async function fetchCandidates(params = {}) {
     setLoadingCandidates(true);
-    const query = new URLSearchParams({
-      top_n: params.top_n || controls.top_n,
-      pool_size: params.pool_size || controls.pool_size,
-      season: params.season || controls.season,
-    });
-    const response = await fetch(`${API_BASE}/candidate_pool?${query}`);
-    const payload = await response.json();
-    setCandidates(payload.results || []);
-    setMetrics((prev) => prev);
-    setLoadingCandidates(false);
+    setCandidateError("");
+    try {
+      const query = new URLSearchParams({
+        top_n: String(params.top_n ?? controls.top_n),
+        pool_size: String(params.pool_size ?? controls.pool_size),
+        season: String(params.season ?? controls.season),
+      });
+      const response = await fetch(`${API_BASE}/candidate_pool?${query}`);
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload.error || `candidate_pool request failed (${response.status})`);
+      }
+      setCandidates(Array.isArray(payload.results) ? payload.results : []);
+    } catch (error) {
+      console.error("Failed to fetch candidates", error);
+      setCandidates([]);
+      setCandidateError(error.message || "Failed to load candidate table");
+    } finally {
+      setLoadingCandidates(false);
+    }
   }
 
   async function fetchMetrics() {
-    const response = await fetch(`${API_BASE}/monitoring/metrics`);
-    const payload = await response.json();
-    setMetrics(payload.metrics || []);
+    try {
+      const response = await fetch(`${API_BASE}/monitoring/metrics`);
+      const payload = await response.json();
+      setMetrics(Array.isArray(payload.metrics) ? payload.metrics : []);
+    } catch (error) {
+      console.error("Failed to fetch metrics", error);
+    }
   }
 
   async function runVectorBuilder() {
     setStatus("running vector builder");
-    const response = await fetch(`${API_BASE}/pipeline/vector-builder`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ input: "json/sample_player_features.json", output: "output/runtime_vectors.json" }),
-    });
-    const payload = await response.json();
-    setLog((prev) => [{ type: "vector", payload }, ...prev].slice(0, 6));
-    setStatus(payload.returncode === 0 ? "vector success" : "vector error");
-    fetchMetrics();
+    try {
+      const response = await fetch(`${API_BASE}/pipeline/vector-builder`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ input: "json/sample_player_features.json", output: "output/runtime_vectors.json" }),
+      });
+      const payload = await response.json();
+      setLog((prev) => [{ type: "vector", payload }, ...prev].slice(0, 6));
+      setStatus(payload.returncode === 0 ? "vector success" : "vector error");
+    } catch (error) {
+      console.error("Vector builder failed", error);
+      setStatus("vector error");
+    } finally {
+      fetchMetrics();
+    }
   }
 
   async function runCandidatePool() {
     setStatus("running candidate pool");
-    const response = await fetch(`${API_BASE}/pipeline/export-candidate-pool`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        season: controls.season === "latest" ? null : Number(controls.season),
+    try {
+      const response = await fetch(`${API_BASE}/pipeline/export-candidate-pool`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          season: controls.season === "latest" ? null : Number(controls.season),
+          pool_size: controls.pool_size,
+          top_n: controls.top_n,
+        }),
+      });
+      const payload = await response.json();
+      setLog((prev) => [{ type: "pool", payload }, ...prev].slice(0, 6));
+      setStatus(payload.returncode === 0 ? "pool success" : "pool error");
+      await fetchCandidates({
+        season: controls.season,
         pool_size: controls.pool_size,
         top_n: controls.top_n,
-      }),
-    });
-    const payload = await response.json();
-    setLog((prev) => [{ type: "pool", payload }, ...prev].slice(0, 6));
-    setStatus(payload.returncode === 0 ? "pool success" : "pool error");
-    fetchCandidates();
-    fetchMetrics();
+      });
+    } catch (error) {
+      console.error("Candidate pool export failed", error);
+      setStatus("pool error");
+    } finally {
+      fetchMetrics();
+    }
   }
 
   return (
@@ -133,28 +164,38 @@ function App() {
           <h2>Top {controls.top_n} MVP Candidates</h2>
           {loadingCandidates ? (
             <div className="placeholder">Loading...</div>
+          ) : candidateError ? (
+            <div className="placeholder">{candidateError}</div>
+          ) : candidates.length === 0 ? (
+            <div className="placeholder">No candidates returned yet.</div>
           ) : (
             <table>
               <thead>
                 <tr>
                   <th>Rank</th>
                   <th>Player</th>
-                  <th>MVP%</th>
+                  <th>MVP Share</th>
                   <th>Team</th>
                   <th>Preview</th>
                 </tr>
               </thead>
               <tbody>
-                {candidates.map((candidate) => (
-                  <tr key={candidate.player_id}>
+                {candidates.map((candidate, index) => (
+                  <tr key={candidate.player_id || `${candidate.player_name}-${index}`}>
                     <td>{candidate.mvp_rank}</td>
                     <td>{candidate.player_name}</td>
-                    <td>{(candidate.mvp_probability * 100).toFixed(1)}%</td>
+                    <td>
+                      <details>
+                        <summary>{((candidate.mvp_share_of_top_n ?? candidate.mvp_probability ?? 0) * 100).toFixed(1)}%</summary>
+                        <div>Raw model probability: {((candidate.mvp_probability_raw ?? candidate.mvp_probability ?? 0) * 100).toFixed(2)}%</div>
+                        <div>Share of displayed top N: {((candidate.mvp_share_of_top_n ?? 0) * 100).toFixed(2)}%</div>
+                      </details>
+                    </td>
                     <td>{candidate.metadata?.team || ""}</td>
                     <td>
                       <details>
                         <summary>Features</summary>
-                        <pre>{JSON.stringify(candidate.vector.slice(0, 12), null, 2)}</pre>
+                        <pre>{JSON.stringify((candidate.vector || []).slice(0, 12), null, 2)}</pre>
                       </details>
                     </td>
                   </tr>

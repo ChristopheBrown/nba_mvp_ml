@@ -62,11 +62,11 @@ def candidate_pool():
 
     season_param = request.args.get("season")
     season = None
-    if season_param:
+    if season_param and season_param != "latest":
         try:
             season = int(season_param)
         except ValueError:
-            return jsonify({"error": "`season` must be an integer."}), 400
+            return jsonify({"error": "`season` must be an integer or `latest`."}), 400
     try:
         pool_size = int(request.args.get("pool_size", 30))
     except ValueError:
@@ -74,6 +74,7 @@ def candidate_pool():
 
     mode = request.args.get("mode", "latest")
     cursor = request.args.get("cursor")
+    historical_mode = request.args.get("historical_mode", "false").lower() in {"1", "true", "yes"}
 
     service = CandidatePoolService(handler=_model_handler)
     try:
@@ -83,6 +84,7 @@ def candidate_pool():
             top_n=top_n,
             mode=mode,
             after_id=cursor,
+            historical_mode=historical_mode,
         )
     except Exception as exc:  # noqa: BLE001
         return jsonify({"error": str(exc)}), 500

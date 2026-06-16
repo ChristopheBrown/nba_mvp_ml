@@ -33,7 +33,7 @@ def _mock_build_rows(*args: Any, **kwargs: Any):
     row_high = {feature: value + 1.0 for feature, value in base_row.items()}
     names = ["Player High", "Player Low"]
     ids = ["01", "02"]
-    metadata = [{"minutes": 100}, {"minutes": 95}]
+    metadata = [{"minutes": 100, "pool_score": 0.9}, {"minutes": 95, "pool_score": 0.8}]
     return [row_high, base_row], names, ids, metadata
 
 
@@ -42,7 +42,7 @@ def _mock_build_rows_three(*args: Any, **kwargs: Any):
     base_row = {feature: float(idx) for idx, feature in enumerate(schema.vector_order, start=1)}
     names = ["Player Red", "Player Blue", "Player Green"]
     ids = ["01", "02", "03"]
-    metadata = [{"minutes": 30}, {"minutes": 25}, {"minutes": 20}]
+    metadata = [{"minutes": 30, "pool_score": 0.6}, {"minutes": 25, "pool_score": 0.5}, {"minutes": 20, "pool_score": 0.4}]
     return [base_row, base_row, base_row], names, ids, metadata
 
 
@@ -62,6 +62,8 @@ def test_candidate_pool_service_ranks_descending(monkeypatch):
     assert results[1]["player_name"] == "Player High"
     assert results[0]["mvp_rank"] == 1
     assert results[1]["mvp_rank"] == 2
+    assert math.isclose(sum(row["mvp_share_of_top_n"] for row in results), 1.0)
+    assert payload["candidate_pool"]["historical_mode"] is False
 
 
 def test_candidate_pool_service_requires_scaler(monkeypatch, tmp_path):
@@ -84,5 +86,6 @@ def test_candidate_pool_service_reports_scaler_and_cursor(monkeypatch):
     assert payload["candidate_pool"]["next_cursor"]
 
     cursor = payload["results"][0]["player_id"]
-    paged, _ = service.build_candidate_pool(pool_size=3, top_n=1, after_id=cursor)
+    paged, _ = service.build_candidate_pool(pool_size=3, top_n=1, after_id=cursor, historical_mode=True)
     assert paged["candidate_pool"]["after_id"] == cursor
+    assert paged["candidate_pool"]["historical_mode"] is True

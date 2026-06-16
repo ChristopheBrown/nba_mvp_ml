@@ -8,12 +8,11 @@ from typing import Any, Mapping, Sequence
 import numpy as np
 
 from src.features.feature_builder import FeatureVector, RuntimeFeatureBuilder
-from src.features.pipeline import build_candidate_feature_rows
+from src.features.pipeline import POOL_DEFINITION, build_candidate_feature_rows
 from src.features.schema import FeatureSchema, load_feature_schema
 from src.monitoring import emit_metric
 
 DEFAULT_SCALER_PATH = Path("json/scaler_params_v1.json")
-POOL_DEFINITION = "top 30 by season-to-date minutes"
 
 
 class CandidatePoolService:
@@ -57,11 +56,13 @@ class CandidatePoolService:
         self,
         season: int | None,
         pool_size: int,
+        historical_mode: bool = False,
     ) -> tuple[list[FeatureVector], list[str], list[str]]:
         rows, names, ids, metadata = build_candidate_feature_rows(
             season=season,
             top_n=pool_size,
             schema=self.schema,
+            historical_mode=historical_mode,
         )
         builder = RuntimeFeatureBuilder(schema=self.schema, scaler_params=self.scaler_params)
         vectors: list[FeatureVector] = []
@@ -83,12 +84,13 @@ class CandidatePoolService:
     def build_candidate_pool(
         self,
         season: int | None = None,
-        pool_size: int = 30,
+        pool_size: int = 50,
         top_n: int = 5,
         mode: str = "latest",
         after_id: str | None = None,
+        historical_mode: bool = False,
     ) -> tuple[Mapping[str, Any], list[FeatureVector]]:
-        vectors, names, ids = self._build_vectors(season, pool_size)
+        vectors, names, ids = self._build_vectors(season, pool_size, historical_mode=historical_mode)
         if not vectors:
             raise ValueError("No candidate vectors built for the pool")
 
@@ -126,10 +128,18 @@ class CandidatePoolService:
         if selected and len(sliced) > top_n:
             next_cursor = selected[-1]["player_id"]
 
+        displayed_probability_total = sum(candidate["mvp_probability"] for candidate in selected)
+
         results = []
         for rank_offset, candidate in enumerate(selected):
             entry = dict(candidate)
             entry["mvp_rank"] = start + rank_offset + 1
+            entry["mvp_probability_raw"] = float(candidate["mvp_probability"])
+            entry["mvp_share_of_top_n"] = (
+                float(candidate["mvp_probability"]) / displayed_probability_total
+                if displayed_probability_total > 0
+                else 0.0
+            )
             results.append(entry)
 
         emit_metric(
@@ -146,6 +156,7 @@ class CandidatePoolService:
                 "definition": self.pool_definition,
                 "pool_size": len(candidates),
                 "top_n": top_n,
+                "historical_mode": historical_mode,
                 "snapshot_timestamp": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
                 "after_id": after_id,
                 "next_cursor": next_cursor,
