@@ -4,6 +4,8 @@ EXPECTED_FEATURES = 24
 
 
 class FakeModelHandler:
+    model_version = "fake-test-model"
+
     def load_model(self):
         return self
 
@@ -27,6 +29,7 @@ def test_predict_endpoint_returns_predictions():
     data = response.get_json()
     assert data["predictions"] == [123.45]
     assert data["count"] == 1
+    assert data["model_version"] == "fake-test-model"
 
 
 def test_predict_endpoint_validates_payload():
