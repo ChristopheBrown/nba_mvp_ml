@@ -1,0 +1,129 @@
+{
+  "player": "Demo Player",
+  "timestamp": "2026-04-03T20:07:25.422063",
+  "snapshot_sources": [
+    "demo"
+  ],
+  "scores": [
+    {
+      "id": "1",
+      "title": "Team Success and Playoff Position",
+      "rating": 8,
+      "label": "OLLAMA",
+      "score": 0.8,
+      "rationale": "Demo rating for instrumentation and candidate rerun check."
+    },
+    {
+      "id": "2",
+      "title": "Impact on Winning",
+      "rating": 8,
+      "label": "OLLAMA",
+      "score": 0.8,
+      "rationale": "Demo rating for instrumentation and candidate rerun check."
+    },
+    {
+      "id": "3",
+      "title": "Narratives and Storylines",
+      "rating": 8,
+      "label": "OLLAMA",
+      "score": 0.8,
+      "rationale": "Demo rating for instrumentation and candidate rerun check."
+    },
+    {
+      "id": "4",
+      "title": "Voter Fatigue",
+      "rating": 8,
+      "label": "OLLAMA",
+      "score": 0.8,
+      "rationale": "Demo rating for instrumentation and candidate rerun check."
+    },
+    {
+      "id": "5",
+      "title": "Clutch Performances",
+      "rating": 8,
+      "label": "OLLAMA",
+      "score": 0.8,
+      "rationale": "Demo rating for instrumentation and candidate rerun check."
+    },
+    {
+      "id": "6",
+      "title": "Media and Fan Sentiment",
+      "rating": 8,
+      "label": "OLLAMA",
+      "score": 0.8,
+      "rationale": "Demo rating for instrumentation and candidate rerun check."
+    },
+    {
+      "id": "7",
+      "title": "Leadership and Intangibles",
+      "rating": 8,
+      "label": "OLLAMA",
+      "score": 0.8,
+      "rationale": "Demo rating for instrumentation and candidate rerun check."
+    },
+    {
+      "id": "8",
+      "title": "Historical Significance",
+      "rating": 8,
+      "label": "OLLAMA",
+      "score": 0.8,
+      "rationale": "Demo rating for instrumentation and candidate rerun check."
+    },
+    {
+      "id": "9",
+      "title": "Defying Expectations",
+      "rating": 8,
+      "label": "OLLAMA",
+      "score": 0.8,
+      "rationale": "Demo rating for instrumentation and candidate rerun check."
+    },
+    {
+      "id": "10",
+      "title": "Competitor Context",
+      "rating": 8,
+      "label": "OLLAMA",
+      "score": 0.8,
+      "rationale": "Demo rating for instrumentation and candidate rerun check."
+    },
+    {
+      "id": "11",
+      "title": "Defensive Impact",
+      "rating": 8,
+      "label": "OLLAMA",
+      "score": 0.8,
+      "rationale": "Demo rating for instrumentation and candidate rerun check."
+    },
+    {
+      "id": "12",
+      "title": "Market Size and Visibility",
+      "rating": 8,
+      "label": "OLLAMA",
+      "score": 0.8,
+      "rationale": "Demo rating for instrumentation and candidate rerun check."
+    },
+    {
+      "id": "13",
+      "title": "Postseason Expectations",
+      "rating": 8,
+      "label": "OLLAMA",
+      "score": 0.8,
+      "rationale": "Demo rating for instrumentation and candidate rerun check."
+    },
+    {
+      "id": "14",
+      "title": "Role and Usage",
+      "rating": 8,
+      "label": "OLLAMA",
+      "score": 0.8,
+      "rationale": "Demo rating for instrumentation and candidate rerun check."
+    },
+    {
+      "id": "15",
+      "title": "Player Popularity",
+      "rating": 8,
+      "label": "OLLAMA",
+      "score": 0.8,
+      "rationale": "Demo rating for instrumentation and candidate rerun check."
+    }
+  ]
+}

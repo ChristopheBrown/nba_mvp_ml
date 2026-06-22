@@ -1,27 +1,43 @@
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Optional
+
 import mlflow.pyfunc
-import os
+import numpy as np
+
+from config import Settings, settings
+
 
 class ModelHandler:
-    """Handles loading and predicting with the model."""
-    def __init__(self, use_mlflow=True):
+    """Load and serve the MVP model using either MLflow or a packaged artifact."""
+
+    def __init__(self, runtime_settings: Optional[Settings] = None) -> None:
+        self._settings = runtime_settings or settings
         self.model = None
-        self.use_mlflow = use_mlflow
-        self.mlflow_model_uri = os.getenv("MLFLOW_MODEL_URI", "models:/24-nn-1/1")
-        self.local_model_path = os.getenv("LOCAL_MODEL_PATH", "model.pkl")
+        self._model_version: str | None = None
 
     def load_model(self):
-        """Load the model, either from MLflow or locally."""
-        if self.use_mlflow:
-            print(f"Loading model from MLflow: {self.mlflow_model_uri}")
-            self.model = mlflow.pyfunc.load_model(self.mlflow_model_uri)
-        else:
-            import joblib
-            print(f"Loading local model from: {self.local_model_path}")
-            self.model = joblib.load(self.local_model_path)
+        if self.model is not None:
+            return self.model
 
-    def predict(self, input_data):
-        """Make predictions with the loaded model."""
-        if not self.model:
-            raise ValueError("Model is not loaded. Call `load_model()` first.")
-        
-        return self.model.predict(input_data)
+        target = self._settings.resolved_model_target
+        if self._settings.mlflow_model_uri is None:
+            artifact_path = Path(target)
+            if not artifact_path.exists():
+                raise FileNotFoundError(
+                    f"Packaged model artifact not found at {artifact_path}. "
+                    "Run the packaging step or set MVP_MLFLOW_MODEL_URI."
+                )
+        self._model_version = Path(target).name
+        self.model = mlflow.pyfunc.load_model(target)
+        return self.model
+
+    def predict(self, input_array: np.ndarray):
+        if self.model is None:
+            self.load_model()
+        return self.model.predict(input_array)
+
+    @property
+    def model_version(self) -> str:
+        return self._model_version or "unknown"

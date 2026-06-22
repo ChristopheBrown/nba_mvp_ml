@@ -1,5 +1,10 @@
+from config import settings
+
+
 class Config:
-    """Flask Configuration."""
-    DEBUG = True
-    MLFLOW_MODEL_URI = "models:/24-nn-1/1"  # Update with your MLflow model URI
-    LOCAL_MODEL_PATH = "model.pkl"
+    """Expose strongly-typed settings to the Flask app."""
+
+    DEBUG = settings.debug
+    MVP_MODEL_TARGET = settings.resolved_model_target
+    MVP_USE_MLFLOW = settings.mlflow_model_uri is not None
+    MVP_MODEL_ARTIFACT_PATH = str(settings.model_artifact_path)

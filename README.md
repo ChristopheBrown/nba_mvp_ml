@@ -14,6 +14,7 @@ The system is tailored to be a portfolio piece, highlighting skills in data engi
 2. **End-to-End Solution**: Integrate data pipelines, machine learning models, and APIs into a cohesive architecture.
 3. **Portfolio Value**: Showcase the ability to design, develop, and deploy complex ML systems.
 4. **Real-Time Potential**: Lay the groundwork for real-time predictions and data ingestion.
+5. **Feature Contract Discipline**: Maintain an explicit schema (see `json/feature_schema_v1.json`) and runtime builder (`src/features/feature_builder.py`) so scoring vectors always match the locked v1 order and normalization expectations.
 
 ---
 
@@ -49,32 +50,95 @@ The system is tailored to be a portfolio piece, highlighting skills in data engi
 
 ---
 
+## Runtime Feature Builder
+- **Candidate pool ranking**: `scripts/build_candidate_pool_vectors.py` builds the normalized vectors, saves the latest scaler params (`json/scaler_params_v1.json`), and exports the top `N` candidate probabilities + feature vectors under `data_exporters/candidate_pool/`. Use the script (or a cron job) to refresh the ranking artifacts before pushing API updates.
+
+
+- **Schema contract**: `json/feature_schema_v1.json` locks the ordered 24-feature vector for the MVP model and documents which stats, advanced metrics, and sentiment signals are expected in each position.
+- **Runtime enforcement**: `src/features/feature_builder.py` consumes the schema artifact (plus optional `mean`/`scale` arrays) to validate inputs, normalize using stored scaler parameters, and emit `FeatureVector` records that carry metadata for inspection before scoring.
+- **Demo script**: `scripts/build_runtime_feature_vectors.py` accepts player feature mappings (examples live in `json/sample_player_features.json`) and writes normalized vectors to disk so you can verify schema adherence without ingesting the entire data lake.
+- **Runtime pipeline**: `src/features/pipeline.py` loads the season totals, derives TAP-level stats (PER, BPM, Win Shares, TOV%, ORtg, etc.), and merges the sample sentiment bundle at `json/sample_sentiment_scores.json` so runtime vectors stay aligned with the locked schema.
+- **Candidate builder**: `scripts/build_candidate_pool_vectors.py --season 2023 --top-n 30` (or adjust the season) materializes both `output/candidate_feature_vectors.json` and the latest `json/scaler_params_v1.json`, giving the runtime feature builder the normalization parameters it needs before scoring.
+
+
+
+## Candidate Pool Rankings
+
+- **CLI export**: `scripts/build_candidate_pool_vectors.py --season <year> --pool-size 30 --top-n 5` fits the training scaler, normalizes the pool, scores the MVP model, and writes both the ranking payload (`data_exporters/candidate_pool/latest_candidate_pool.json`) and the schema-aligned feature vectors (`data_exporters/candidate_pool/candidate_feature_vectors.json`). It also refreshes `json/scaler_params_v1.json` so the runtime builder stays synchronized.
+
+- **HTTP endpoint**: `GET /candidate_pool` (query params: `top_n`, `pool_size`, `season`, `mode`, `cursor`). The response includes `feature_schema_version`, `scaler_version`, `model_version`, deterministic metadata (`pool_size`, `next_cursor`, `snapshot_timestamp`), and the ranked `results` array (each entry includes `player_id`, `player_name`, `mvp_probability`, `not_mvp_probability`, `mvp_rank`, and the builder metadata). Supply `cursor` to page through the sorted pool in a keyset-friendly way.
+
+## Testing and Validation
+
+- **Contract checks**: `tests/test_feature_builder.py` proves the runtime builder raises helpful errors when features are missing, preserves metadata through batch builds, and applies normalization when scaler params are provided.
+
+## API Contracts & Monitoring
+
+- **/predict**: Accepts the 24-float schema and returns `predictions`, `count`, and `model_version` so clients know exactly which artifact generated the score.
+- **/candidate_pool**: Returns `feature_schema_version`, `scaler_version`, `model_version`, pagination tokens (`cursor`/`next_cursor`), and the deterministic ranked `results` array. Clients can re-run the CLI export or hit this endpoint with `cursor` to stream the top-N rankings consistently.
+- **Monitoring hooks**: `src/monitoring.py` emits structured metric logs that drive dashboards or Prometheus-style exporters. Current metric names include `stats_rows_loaded`, `sentiment_entries_processed`, `sentiment_missing_keys`, and `candidate_pool_scored`, covering the stats/sentiment ingestion and the candidate-pool scoring runs.
+- **Control widgets**: `POST /pipeline/vector-builder` and `POST /pipeline/export-candidate-pool` run the vector builder or candidate pool exports inside `.venv312`, returning the raw logs and return codes; `GET /monitoring/metrics` surfaces the latest instrumentation records.
+- **Local UI plan**: `docs/ui-plan.md` now captures the React/Vite-powered localhost control panel with pipeline controls, monitoring metrics, and the candidate table.
+
+## Local UI Dashboard
+
+The React + Vite SPA under `ui-app/` proxies to the Flask backend to run scripts, view rankings, and monitor metrics.
+
+```bash
+cd ui-app
+npm install
+npm run dev
+```
+
+The Vite dev server proxies `/predict`, `/candidate_pool`, `/pipeline/*`, and `/monitoring/*` to `http://localhost:5000` (see `ui-app/vite.config.js`). When ready for production, run `npm run build` and copy `ui-app/dist` into `flask_app/static/ui`, or point `/ui` (new control blueprint) at that directory.
+
 ## Example Usage
 
-### Running the Flask API
+### Demo-ready serving (local or Docker)
+
+The packaged `24-nn-1` MLflow artifact lives under `mlops/artifacts/24-nn-1`. The quickest entry points are:
+
+#### 1. Prepare a Python 3.12 sandbox
+- Install Python 3.12 (for example, `brew install python@3.12` on macOS or use your distro’s `python3.12` package, `pyenv install 3.12.13`, etc.).
+- Create a fresh virtual environment: `python3.12 -m venv .venv312`.
+- Activate it: `source .venv312/bin/activate`.
+- Install the dependencies: `pip install -r requirements.txt`.
+- Confirm that `mlops/artifacts/24-nn-1` exists (or point `MVP_MODEL_ARTIFACT_PATH` at your packaged artifact).
+
+Running the demo with any Python interpreter older than 3.12 (the default macOS `/usr/bin/python3` is 3.9.6) currently raises `TypeError: code() takes at most 16 arguments (18 given)` inside `torch.load`. Using a 3.12 interpreter resolves that compatibility issue because the saved code objects match the artifact.
+
+#### 2. Launch the Flask service
+With the sandbox active, run `make demo`. The Makefile already exports `FLASK_RUN_PORT` and `MVP_MODEL_ARTIFACT_PATH` so the packaged artifact is picked up automatically. If you prefer to run Flask manually, use:
 ```bash
-export FLASK_APP=flask_app
-flask run --host 0.0.0.0 --port 5002
+FLASK_RUN_PORT=5000 MVP_MODEL_ARTIFACT_PATH=$(pwd)/mlops/artifacts/24-nn-1 \
+python -m flask --app flask_app run --host 0.0.0.0 --port 5000
 ```
+Once the artifact loads you will see the Werkzeug banner announcing `Running on http://127.0.0.1:5000`.
 
-### Sending a Prediction Request
-Using Python
-```python
-import requests
-import numpy as np
-
-url = "http://127.0.0.1:5002/predict"
-data = np.random.rand(1, 24).tolist()  # Replace with real input data
-response = requests.post(url, json=data)
-print(response.json())
-```
-
-Using curl
+#### 3. Hit `/predict` for a sanity check
 ```bash
-curl -X POST http://127.0.0.1:5002/predict \
--H "Content-Type: application/json" \
--d '[[-0.179, 0.214, ... ]]'
+curl -s -X POST http://127.0.0.1:5000/predict \
+  -H "Content-Type: application/json" \
+  -d '{"features": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}'
 ```
+Sample response from the zero-vector input:
+```json
+{
+  "count": 1,
+  "predictions": [[0.999840497970581, 0.00015953574620652944]]
+}
+```
+
+#### 4. Docker / gunicorn
+`make docker-demo` builds the image from `Dockerfile`, wires gunicorn, and exposes port `8000` via `docker-compose`. The compose file already wires `MVP_MODEL_ARTIFACT_PATH` so the packaged artifact is mounted by default.
+
+Full, step-by-step instructions (env vars, smoke tests, curl examples) now live in `docs/demo.md`.
+
+### Running the Flask API (legacy instructions)
+If you still want the original bare `flask run` flow, it has been retained in `docs/demo.md` under “Legacy manual run.” The same Python 3.12 sandbox works for those steps as well.
+
+### Prediction request schema
+The `/predict` endpoint expects a JSON body with a `features` array of exactly 24 floats (see `flask_app/schemas.py`). The sample call above proves the format; swap in real feature vectors as needed to reproduce MVP scores.
 
 ## Challenges Encountered
 1. **Data Complexity**: 
